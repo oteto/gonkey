@@ -1,4 +1,4 @@
-package tokenizer
+package token
 
 const (
 	ILLEGAL = "ILLEGAL"
@@ -58,7 +58,7 @@ type Token struct {
 }
 
 // トークンを作成する
-func newToken(tokenType TokenType, literal byte) Token {
+func NewToken(tokenType TokenType, literal byte) Token {
 	return Token{
 		Type:    tokenType,
 		Literal: string(literal),

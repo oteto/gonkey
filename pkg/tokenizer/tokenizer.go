@@ -1,5 +1,7 @@
 package tokenizer
 
+import "github.com/oteto/gonkey/pkg/token"
+
 type Tokenizer struct {
 	input        string
 	position     int  // 現在の読み込み位置
@@ -8,67 +10,67 @@ type Tokenizer struct {
 }
 
 // 現在の読み込み文字のトークンを取得し、読み込み位置を進める
-func (t *Tokenizer) NextToken() Token {
-	var token Token
+func (t *Tokenizer) NextToken() token.Token {
+	var tkn token.Token
 
 	t.skipWhiteSpace()
 
 	switch t.char {
 	case '=':
 		if t.peekChar() == '=' {
-			token = t.makeTwoCharToken(EQ)
+			tkn = t.makeTwoCharToken(token.EQ)
 			break
 		}
-		token = newToken(ASSIGN, t.char)
+		tkn = token.NewToken(token.ASSIGN, t.char)
 	case '+':
-		token = newToken(PLUS, t.char)
+		tkn = token.NewToken(token.PLUS, t.char)
 	case '-':
-		token = newToken(MINUS, t.char)
+		tkn = token.NewToken(token.MINUS, t.char)
 	case '*':
-		token = newToken(ASTER, t.char)
+		tkn = token.NewToken(token.ASTER, t.char)
 	case '/':
-		token = newToken(SLASH, t.char)
+		tkn = token.NewToken(token.SLASH, t.char)
 	case '!':
 		if t.peekChar() == '=' {
-			token = t.makeTwoCharToken(NOT_EQ)
+			tkn = t.makeTwoCharToken(token.NOT_EQ)
 			break
 		}
-		token = newToken(BANG, t.char)
+		tkn = token.NewToken(token.BANG, t.char)
 	case '<':
-		token = newToken(LT, t.char)
+		tkn = token.NewToken(token.LT, t.char)
 	case '>':
-		token = newToken(GT, t.char)
+		tkn = token.NewToken(token.GT, t.char)
 	case ',':
-		token = newToken(COMMA, t.char)
+		tkn = token.NewToken(token.COMMA, t.char)
 	case ';':
-		token = newToken(SEMICOLON, t.char)
+		tkn = token.NewToken(token.SEMICOLON, t.char)
 	case '(':
-		token = newToken(LPAREN, t.char)
+		tkn = token.NewToken(token.LPAREN, t.char)
 	case ')':
-		token = newToken(RPAREN, t.char)
+		tkn = token.NewToken(token.RPAREN, t.char)
 	case '{':
-		token = newToken(LBRACE, t.char)
+		tkn = token.NewToken(token.LBRACE, t.char)
 	case '}':
-		token = newToken(RBRACE, t.char)
+		tkn = token.NewToken(token.RBRACE, t.char)
 	case 0:
-		token.Type = EOF
-		token.Literal = ""
+		tkn.Type = token.EOF
+		tkn.Literal = ""
 	default:
 		if isLetter(t.char) {
-			token.Literal = t.readIdentifer()
-			token.Type = LookUpIndent(token.Literal)
-			return token
+			tkn.Literal = t.readIdentifer()
+			tkn.Type = token.LookUpIndent(tkn.Literal)
+			return tkn
 		} else if isDigit(t.char) {
-			token.Literal = t.readNumber()
-			token.Type = INT
-			return token
+			tkn.Literal = t.readNumber()
+			tkn.Type = token.INT
+			return tkn
 		} else {
-			token = newToken(ILLEGAL, t.char)
+			tkn = token.NewToken(token.ILLEGAL, t.char)
 		}
 	}
 
 	t.readChar()
-	return token
+	return tkn
 }
 
 // 読み込み位置を１つ進める
@@ -120,10 +122,13 @@ func (t *Tokenizer) peekChar() byte {
 
 // ２文字トークンを作成する
 // １文字目を読んだ状態でコールする
-func (t *Tokenizer) makeTwoCharToken(tokenType TokenType) Token {
+func (t *Tokenizer) makeTwoCharToken(tokenType token.TokenType) token.Token {
 	char := t.char
 	t.readChar()
-	return Token{tokenType, string(char) + string(t.char)}
+	return token.Token{
+		Type:    tokenType,
+		Literal: string(char) + string(t.char),
+	}
 }
 
 // トークナイザを作成する
