@@ -42,12 +42,21 @@ func ParserStart(in io.Reader, out io.Writer) {
 		}
 
 		line := scanner.Text()
-		t := tokenizer.New(line)
-		p := parser.New(t)
+		p := parser.New(tokenizer.New(line))
 		program := p.ParseProgram()
 
-		for _, s := range program.Statements {
-			fmt.Printf("%+v\n", s.String())
+		if len(p.Errors()) != 0 {
+			printParserError(out, p.Errors())
+			continue
 		}
+
+		io.WriteString(out, program.String())
+		io.WriteString(out, "\n")
+	}
+}
+
+func printParserError(out io.Writer, errors []string) {
+	for _, msg := range errors {
+		io.WriteString(out, "\t"+msg+"\n")
 	}
 }
