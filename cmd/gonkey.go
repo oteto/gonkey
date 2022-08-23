@@ -13,6 +13,7 @@ import (
 var (
 	tokenizerOpt = flag.Bool("t", false, "help message for \"t\" option")
 	parserOpt    = flag.Bool("p", false, "help message for \"p\" option")
+	evalOpt      = flag.Bool("e", false, "help message for \"e\" option")
 )
 
 func main() {
@@ -31,6 +32,9 @@ func main() {
 	} else if *parserOpt {
 		fmt.Println("output AST.")
 		repl.ParserStart(os.Stdin, os.Stdout)
+	} else if *evalOpt {
+		fmt.Println("output Eval.")
+		repl.EvalStart(os.Stdin, os.Stdout)
 	} else {
 		fmt.Println("please input option -t or -p.")
 	}
