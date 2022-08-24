@@ -530,6 +530,33 @@ func TestLetStatements(t *testing.T) {
 	}
 }
 
+func TestStringLiteralExpression(t *testing.T) {
+	input := `"Hello World"`
+	p := New(tokenizer.New(input))
+	program := p.ParseProgram()
+
+	checkParserErrors(t, p)
+	checkStatementLength(t, program.Statements, 1)
+
+	stmt := testExpressoinStatement(t, program)
+	literal, ok := stmt.Expression.(*ast.StringLiteral)
+	if !ok {
+		t.Fatalf("stmt.Expression is not *ast.StringLiteral. got=%T", stmt.Expression)
+	}
+	if literal.Value != "Hello World" {
+		t.Fatalf("literal.Value is not 'Hello World'. got=%q", literal.Value)
+	}
+}
+
+func testExpressoinStatement(t *testing.T, program *ast.Program) *ast.ExpressionStatement {
+	t.Helper()
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not *ast.ExpresionStatement. got=%T", program.Statements[0])
+	}
+	return stmt
+}
+
 func testLetStatement(t *testing.T, stmt ast.Statement, identifer string) {
 	t.Helper()
 

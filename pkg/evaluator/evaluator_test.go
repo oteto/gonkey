@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/oteto/gonkey/pkg/object"
@@ -174,6 +175,10 @@ if (10 > 1) {
 			"foobar",
 			IDENTIFIER_NOT_FOUND_ERROR_PREFIX + "foobar",
 		},
+		{
+			`"" - ""`,
+			UNKOWN_OPERATOR_ERROR_PREFIX + "STRING - STRING",
+		},
 	}
 
 	for _, tt := range tests {
@@ -247,11 +252,63 @@ func TestFunctionApplication(t *testing.T) {
 	}
 }
 
+func TestStringLiteral(t *testing.T) {
+	input := `"Hello World"`
+	evaluated := testEval(input)
+	testStringObject(t, evaluated, "Hello World")
+}
+
+func TestStringConcatenation(t *testing.T) {
+	input := `"Hello" + " " + "World"`
+	evaluated := testEval(input)
+	testStringObject(t, evaluated, "Hello World")
+}
+
+func TestBuiltinFunctions(t *testing.T) {
+	tests := []struct {
+		input  string
+		expect any
+	}{
+		{`len("")`, 0},
+		{`len("aiueo")`, 5},
+		{`len("hello world")`, 11},
+		{`len(1)`, fmt.Sprintf(BUILTIN_ARGUMENT_TYPE_ERRROR, "len", object.INTEGER_OBJECT)},
+		{`len("", "a")`, fmt.Sprintf(BUILTIN_NUMBER_OF_ARGUMENT_ERROR, 2, 1)},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		switch expect := tt.expect.(type) {
+		case int:
+			testIntegerObject(t, evaluated, int64(expect))
+		case string:
+			errObj, ok := evaluated.(*object.Error)
+			if !ok {
+				t.Fatalf("object is not Error. got=%T (%+v)", evaluated, evaluated)
+			}
+			if errObj.Message != expect {
+				t.Fatalf("wrong error message. want=%q, got=%q", expect, errObj.Message)
+			}
+		}
+	}
+}
+
 func testEval(input string) object.Object {
 	p := parser.New(tokenizer.New(input))
 	program := p.ParseProgram()
 	env := object.NewEnvironment()
 	return Eval(program, env)
+}
+
+func testStringObject(t *testing.T, obj object.Object, value string) {
+	t.Helper()
+	str, ok := obj.(*object.String)
+	if !ok {
+		t.Fatalf("object is not String. got=%T (%+v)", obj, obj)
+	}
+	if str.Value != value {
+		t.Fatalf("str.Value is not %q. got=%q", value, str.Value)
+	}
 }
 
 func testIntegerObject(t *testing.T, obj object.Object, value int64) {

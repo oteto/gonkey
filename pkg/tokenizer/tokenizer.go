@@ -55,6 +55,9 @@ func (t *Tokenizer) NextToken() token.Token {
 	case 0:
 		tkn.Type = token.EOF
 		tkn.Literal = ""
+	case '"':
+		tkn.Type = token.STRING
+		tkn.Literal = t.readString()
 	default:
 		if isLetter(t.char) {
 			tkn.Literal = t.readIdentifer()
@@ -100,6 +103,17 @@ func (t *Tokenizer) readNumber() string {
 	start := t.position
 	for isDigit(t.char) {
 		t.readChar()
+	}
+	return t.input[start:t.position]
+}
+
+func (t *Tokenizer) readString() string {
+	start := t.position + 1 // " の次 "foo" なら f
+	for {
+		t.readChar()
+		if t.char == '"' || t.char == 0 {
+			break
+		}
 	}
 	return t.input[start:t.position]
 }

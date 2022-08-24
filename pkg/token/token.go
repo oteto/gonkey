@@ -5,8 +5,9 @@ const (
 	EOF     = "EOF"
 
 	// 識別子
-	IDENT = "IDENT"
-	INT   = "INT"
+	IDENT  = "IDENT"
+	INT    = "INT"
+	STRING = "STRING"
 
 	// 演算子
 	ASSIGN = "="

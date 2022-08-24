@@ -78,6 +78,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return args[0]
 		}
 		return applyFunction(function, args)
+	case *ast.StringLiteral:
+		return &object.String{Value: node.Value}
 	}
 
 	return nil
@@ -132,11 +134,15 @@ func evalExpressions(exps []ast.Expression, env *object.Environment) []object.Ob
 }
 
 func evalIdentifier(ident *ast.Identifer, env *object.Environment) object.Object {
-	val, ok := env.Get(ident.Value)
-	if !ok {
-		return newError(IDENTIFIER_NOT_FOUND_ERROR_PREFIX + ident.Value)
+	if val, ok := env.Get(ident.Value); ok {
+		return val
 	}
-	return val
+
+	if builtin, ok := builtins[ident.Value]; ok {
+		return builtin
+	}
+
+	return newError(IDENTIFIER_NOT_FOUND_ERROR_PREFIX + ident.Value)
 }
 
 func evalIfExpression(ie *ast.IfExpression, env *object.Environment) object.Object {
@@ -169,6 +175,8 @@ func evalInfixExpression(operator string, left, right object.Object) object.Obje
 	switch {
 	case left.Type() == object.INTEGER_OBJECT && right.Type() == object.INTEGER_OBJECT:
 		return evalIntegerInfixExpression(operator, left, right)
+	case left.Type() == object.STRING_OBJECT && right.Type() == object.STRING_OBJECT:
+		return evalStringInfixExpression(operator, left, right)
 	case operator == "==":
 		return nativeBoolToBooleanObject(left == right)
 	case operator == "!=":
@@ -206,6 +214,15 @@ func evalIntegerInfixExpression(operator string, left, right object.Object) obje
 	}
 }
 
+func evalStringInfixExpression(operator string, left, right object.Object) object.Object {
+	if operator != "+" {
+		return newError(UNKOWN_OPERATOR_ERROR_PREFIX+"%s %s %s", left.Type(), operator, right.Type())
+	}
+	leftVal := left.(*object.String).Value
+	rightVal := right.(*object.String).Value
+	return &object.String{Value: leftVal + rightVal}
+}
+
 func evalBangOperatorExpression(right object.Object) object.Object {
 	switch right {
 	case TRUE:
@@ -229,13 +246,16 @@ func evalMinusPrefixOperatorExpression(right object.Object) object.Object {
 }
 
 func applyFunction(function object.Object, args []object.Object) object.Object {
-	fn, ok := function.(*object.Function)
-	if !ok {
+	switch fn := function.(type) {
+	case *object.Builtin:
+		return fn.Fn(args...)
+	case *object.Function:
+		evaluatedEnv := extendFunctionEnv(fn, args)
+		evaluated := Eval(fn.Body, evaluatedEnv)
+		return unwrapReturnValue(evaluated)
+	default:
 		return newError(NOT_FUNCTION_ERROR+"%s", function.Type())
 	}
-	evaluatedEnv := extendFunctionEnv(fn, args)
-	evaluated := Eval(fn.Body, evaluatedEnv)
-	return unwrapReturnValue(evaluated)
 }
 
 func extendFunctionEnv(fn *object.Function, args []object.Object) *object.Environment {
