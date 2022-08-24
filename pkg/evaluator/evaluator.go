@@ -12,6 +12,7 @@ const (
 	TYPE_MISMATCH_ERROR_PREFIX        = "type mismatch: "
 	IDENTIFIER_NOT_FOUND_ERROR_PREFIX = "identifier not found: "
 	NOT_FUNCTION_ERROR                = "not a function: "
+	INDEX_TYPE_MISMATCH               = "index operator not supported: "
 )
 
 var (
@@ -80,6 +81,22 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return applyFunction(function, args)
 	case *ast.StringLiteral:
 		return &object.String{Value: node.Value}
+	case *ast.ArrayLiteral:
+		elements := evalExpressions(node.Elements, env)
+		if len(elements) == 1 && isError(elements[0]) {
+			return elements[0]
+		}
+		return &object.Array{Elements: elements}
+	case *ast.IndexExpression:
+		left := Eval(node.Left, env)
+		if isError(left) {
+			return left
+		}
+		index := Eval(node.Index, env)
+		if isError(index) {
+			return index
+		}
+		return evalIndexExpression(left, index)
 	}
 
 	return nil
@@ -243,6 +260,26 @@ func evalMinusPrefixOperatorExpression(right object.Object) object.Object {
 
 	value := right.(*object.Integer).Value
 	return &object.Integer{Value: -value}
+}
+
+func evalIndexExpression(left, index object.Object) object.Object {
+	switch {
+	case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJECT:
+		return evalArrayIndexExpression(left, index)
+	default:
+		return newError(INDEX_TYPE_MISMATCH+"%s", left.Type())
+	}
+}
+
+func evalArrayIndexExpression(array, index object.Object) object.Object {
+	arrayObj := array.(*object.Array)
+	idx := index.(*object.Integer).Value
+	length := len(arrayObj.Elements) - 1
+
+	if idx < 0 || int64(length) < idx {
+		return NULL
+	}
+	return arrayObj.Elements[idx]
 }
 
 func applyFunction(function object.Object, args []object.Object) object.Object {

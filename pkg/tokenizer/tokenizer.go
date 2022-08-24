@@ -58,6 +58,10 @@ func (t *Tokenizer) NextToken() token.Token {
 	case '"':
 		tkn.Type = token.STRING
 		tkn.Literal = t.readString()
+	case '[':
+		tkn = token.NewToken(token.LBRACKET, t.char)
+	case ']':
+		tkn = token.NewToken(token.RBRACKET, t.char)
 	default:
 		if isLetter(t.char) {
 			tkn.Literal = t.readIdentifer()

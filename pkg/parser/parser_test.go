@@ -297,6 +297,14 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 			"add(a + b + c * d / f + g)",
 			"add((((a + b) + ((c * d) / f)) + g))",
 		},
+		{
+			"a * [1, 2, 3, 4][b * c] * d",
+			"((a * ([1, 2, 3, 4][(b * c)])) * d)",
+		},
+		{
+			"add(a * b[2], b[1], 2 * [1, 2][1])",
+			"add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))",
+		},
 	}
 
 	for _, tt := range tests {
@@ -539,13 +547,42 @@ func TestStringLiteralExpression(t *testing.T) {
 	checkStatementLength(t, program.Statements, 1)
 
 	stmt := testExpressoinStatement(t, program)
-	literal, ok := stmt.Expression.(*ast.StringLiteral)
+	testStringLiteral(t, stmt.Expression, "Hello World")
+}
+
+func TestArrayLiteralExpression(t *testing.T) {
+	input := `[1, 2 * 2, "hello"]`
+	p := New(tokenizer.New(input))
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+	checkStatementLength(t, program.Statements, 1)
+	stmt := testExpressoinStatement(t, program)
+	array, ok := stmt.Expression.(*ast.ArrayLiteral)
 	if !ok {
-		t.Fatalf("stmt.Expression is not *ast.StringLiteral. got=%T", stmt.Expression)
+		t.Fatalf("stmt.Expression is not *asy.ArrayLiteral. got=%T", stmt.Expression)
 	}
-	if literal.Value != "Hello World" {
-		t.Fatalf("literal.Value is not 'Hello World'. got=%q", literal.Value)
+	if len(array.Elements) != 3 {
+		t.Fatalf("len(array.Elements) is not 3. got=%d", len(array.Elements))
 	}
+
+	testIntegerLiteral(t, array.Elements[0], 1)
+	testInfixExpression(t, array.Elements[1], 2, "*", 2)
+	testStringLiteral(t, array.Elements[2], "hello")
+}
+
+func TestParsingIndexExpression(t *testing.T) {
+	input := "array[1 + 1]"
+	p := New(tokenizer.New(input))
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+	checkStatementLength(t, program.Statements, 1)
+	stmt := testExpressoinStatement(t, program)
+	idx, ok := stmt.Expression.(*ast.IndexExpression)
+	if !ok {
+		t.Fatalf("stmt.Expression is not *ast,IndexExpression. got=%T", stmt.Expression)
+	}
+	testIdentifier(t, idx.Left, "array")
+	testInfixExpression(t, idx.Index, 1, "+", 1)
 }
 
 func testExpressoinStatement(t *testing.T, program *ast.Program) *ast.ExpressionStatement {
@@ -555,6 +592,18 @@ func testExpressoinStatement(t *testing.T, program *ast.Program) *ast.Expression
 		t.Fatalf("program.Statements[0] is not *ast.ExpresionStatement. got=%T", program.Statements[0])
 	}
 	return stmt
+}
+
+func testStringLiteral(t *testing.T, exp ast.Expression, value string) {
+	t.Helper()
+
+	literal, ok := exp.(*ast.StringLiteral)
+	if !ok {
+		t.Fatalf("exp is not *ast.StringLiteral. got=%T", exp)
+	}
+	if literal.Value != value {
+		t.Fatalf("literal.Value is not %q. got=%q", value, literal.Value)
+	}
 }
 
 func testLetStatement(t *testing.T, stmt ast.Statement, identifer string) {

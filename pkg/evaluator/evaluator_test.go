@@ -293,6 +293,46 @@ func TestBuiltinFunctions(t *testing.T) {
 	}
 }
 
+func TestArrayLiteral(t *testing.T) {
+	input := `[1, 2 * 2, "hello"]`
+	evaluated := testEval(input)
+	array, ok := evaluated.(*object.Array)
+	if !ok {
+		t.Fatalf("object is not *object.Array. got=%T (%+v)", evaluated, evaluated)
+	}
+	if len(array.Elements) != 3 {
+		t.Fatalf("len(array.Elements) is not 3. got=%d", len(array.Elements))
+	}
+	testIntegerObject(t, array.Elements[0], 1)
+	testIntegerObject(t, array.Elements[1], 4)
+	testStringObject(t, array.Elements[2], "hello")
+}
+
+func TestArrayIndexExpression(t *testing.T) {
+	tests := []struct {
+		input  string
+		expect any
+	}{
+		{`[1,2,3][0]`, 1},
+		{`["1",2,3][0]`, "1"},
+		{`let a = [1,2,3]; a[1]`, 2},
+		{`[1,2,3][1+1]`, 3},
+		{`[1,2,3][3]`, nil},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		switch expect := tt.expect.(type) {
+		case int:
+			testIntegerObject(t, evaluated, int64(expect))
+		case string:
+			testStringObject(t, evaluated, expect)
+		default:
+			testNullObject(t, evaluated)
+		}
+	}
+}
+
 func testEval(input string) object.Object {
 	p := parser.New(tokenizer.New(input))
 	program := p.ParseProgram()
