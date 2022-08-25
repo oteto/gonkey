@@ -1,6 +1,10 @@
 package evaluator
 
-import "github.com/oteto/gonkey/pkg/object"
+import (
+	"fmt"
+
+	"github.com/oteto/gonkey/pkg/object"
+)
 
 const (
 	BUILTIN_NUMBER_OF_ARGUMENT_ERROR = "wrong number of arguments. got=%d, want=%d"
@@ -13,6 +17,14 @@ var builtins = map[string]*object.Builtin{
 	"last":  {Fn: builtinLast},
 	"rest":  {Fn: builtinRest},
 	"push":  {Fn: builtinPush},
+	"puts":  {Fn: builtinPuts},
+}
+
+func builtinPuts(args ...object.Object) object.Object {
+	for _, arg := range args {
+		fmt.Println(arg.Inspect())
+	}
+	return NULL
 }
 
 func builtinPush(args ...object.Object) object.Object {
