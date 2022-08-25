@@ -274,6 +274,18 @@ func TestBuiltinFunctions(t *testing.T) {
 		{`len("hello world")`, 11},
 		{`len(1)`, fmt.Sprintf(BUILTIN_ARGUMENT_TYPE_ERRROR, "len", object.INTEGER_OBJECT)},
 		{`len("", "a")`, fmt.Sprintf(BUILTIN_NUMBER_OF_ARGUMENT_ERROR, 2, 1)},
+		{`len([])`, 0},
+		{`len([1, "a"])`, 2},
+		{`first([1, "a"])`, 1},
+		{`first([])`, nil},
+		{`last([1,2,3])`, 3},
+		{`last([])`, nil},
+		{`rest([1,2,3])`, []int{2, 3}},
+		{`rest([1])`, []int{}},
+		{`rest([])`, nil},
+		{`rest(rest([1,2,3]))`, []int{3}},
+		{`push([], 1)`, []int{1}},
+		{`push([1,2], 3)`, []int{1, 2, 3}},
 	}
 
 	for _, tt := range tests {
@@ -289,6 +301,19 @@ func TestBuiltinFunctions(t *testing.T) {
 			if errObj.Message != expect {
 				t.Fatalf("wrong error message. want=%q, got=%q", expect, errObj.Message)
 			}
+		case []int:
+			arr, ok := evaluated.(*object.Array)
+			if !ok {
+				t.Fatalf("object is not Array. got=%T (%+v)", evaluated, evaluated)
+			}
+			if len(expect) != len(arr.Elements) {
+				t.Fatalf("wrong length of array. want=%d, got=%d", len(expect), len(arr.Elements))
+			}
+			for i, a := range arr.Elements {
+				testIntegerObject(t, a, int64(expect[i]))
+			}
+		case nil:
+			testNullObject(t, evaluated)
 		}
 	}
 }
