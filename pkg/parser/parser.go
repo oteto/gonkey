@@ -69,6 +69,7 @@ func New(t *tokenizer.Tokenizer) *Parser {
 	p.registerPrefix(token.FUNCTION, p.parseFunctionLiteral)
 	p.registerPrefix(token.STRING, p.parseStringLiteral)
 	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
+	p.registerPrefix(token.LBRACE, p.parseHashLiteral)
 
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -410,6 +411,37 @@ func (p *Parser) parseIndexExpression(left ast.Expression) ast.Expression {
 	}
 	p.nextToken()
 	return exp
+}
+
+func (p *Parser) parseHashLiteral() ast.Expression {
+	hash := &ast.HashLiteral{Token: p.currToken}
+	hash.Pairs = make(map[ast.Expression]ast.Expression)
+
+	for !p.peekTokenIs(token.RBRACE) {
+		p.nextToken()
+		key := p.parseExpression(LOWEST)
+
+		if !p.peekTokenIs(token.COLON) {
+			return nil
+		}
+		p.nextToken()
+		p.nextToken()
+		value := p.parseExpression(LOWEST)
+
+		hash.Pairs[key] = value
+
+		if !p.peekTokenIs(token.RBRACE) {
+			if !p.peekTokenIs(token.COMMA) {
+				return nil
+			}
+			p.nextToken()
+		}
+	}
+	if !p.peekTokenIs(token.RBRACE) {
+		return nil
+	}
+	p.nextToken()
+	return hash
 }
 
 func (p *Parser) currTokenIs(t token.TokenType) bool {

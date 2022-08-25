@@ -29,6 +29,7 @@ if (5 < 10) {
 "foo"
 "foo bar"
 [1,"s"];
+{"foo":"bar"};
 `
 
 	tests := []struct {
@@ -115,6 +116,12 @@ if (5 < 10) {
 		{token.COMMA, ","},
 		{token.STRING, "s"},
 		{token.RBRACKET, "]"},
+		{token.SEMICOLON, ";"},
+		{token.LBRACE, "{"},
+		{token.STRING, "foo"},
+		{token.COLON, ":"},
+		{token.STRING, "bar"},
+		{token.RBRACE, "}"},
 		{token.SEMICOLON, ";"},
 		{token.EOF, ""},
 	}

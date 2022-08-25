@@ -13,6 +13,7 @@ const (
 	IDENTIFIER_NOT_FOUND_ERROR_PREFIX = "identifier not found: "
 	NOT_FUNCTION_ERROR                = "not a function: "
 	INDEX_TYPE_MISMATCH               = "index operator not supported: "
+	UNUSABLE_HASH_KEY                 = "unusable as hash key: "
 )
 
 var (
@@ -97,6 +98,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return index
 		}
 		return evalIndexExpression(left, index)
+	case *ast.HashLiteral:
+		return evalHashLiteral(node, env)
 	}
 
 	return nil
@@ -266,9 +269,24 @@ func evalIndexExpression(left, index object.Object) object.Object {
 	switch {
 	case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJECT:
 		return evalArrayIndexExpression(left, index)
+	case left.Type() == object.HASH_OBJ:
+		return evalhashIndexExpression(left, index)
 	default:
 		return newError(INDEX_TYPE_MISMATCH+"%s", left.Type())
 	}
+}
+
+func evalhashIndexExpression(hash, index object.Object) object.Object {
+	hashObject := hash.(*object.Hash)
+	key, ok := index.(object.Hashable)
+	if !ok {
+		return newError(UNUSABLE_HASH_KEY+"%s", index.Type())
+	}
+	pair, ok := hashObject.Pairs[key.HashKey()]
+	if !ok {
+		return NULL
+	}
+	return pair.Value
 }
 
 func evalArrayIndexExpression(array, index object.Object) object.Object {
@@ -280,6 +298,27 @@ func evalArrayIndexExpression(array, index object.Object) object.Object {
 		return NULL
 	}
 	return arrayObj.Elements[idx]
+}
+
+func evalHashLiteral(hash *ast.HashLiteral, env *object.Environment) object.Object {
+	pairs := make(map[object.HashKey]object.HashPair)
+	for k, v := range hash.Pairs {
+		key := Eval(k, env)
+		if isError(key) {
+			return key
+		}
+		hashKey, ok := key.(object.Hashable)
+		if !ok {
+			return newError(UNUSABLE_HASH_KEY+"%s", key.Type())
+		}
+		value := Eval(v, env)
+		if isError(value) {
+			return value
+		}
+		pairs[hashKey.HashKey()] = object.HashPair{Key: key, Value: value}
+	}
+
+	return &object.Hash{Pairs: pairs}
 }
 
 func applyFunction(function object.Object, args []object.Object) object.Object {

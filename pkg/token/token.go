@@ -24,6 +24,7 @@ const (
 	// デリミタ（セパレータ）
 	COMMA     = ","
 	SEMICOLON = ";"
+	COLON     = ":"
 
 	// 括弧
 	LPAREN   = "("
