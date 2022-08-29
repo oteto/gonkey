@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="js">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>gonkey interpreter playground</title>
+  </head>
+  <body>
+    <h1>gonkey interpreter playground</h1>
+    <textarea id="source"></textarea>
+    <button id="tokenize">tokenize</button>
+    <button id="parse">parse</button>
+    <button id="exec">exec</button>
+    <textarea id="tokenize_result" readonly></textarea>
+    <textarea id="parse_result" readonly></textarea>
+    <textarea id="exec_result" readonly></textarea>
+
+    <script src="wasm_exec.js"></script>
+    <script>
+      const go = new Go();
+      WebAssembly.instantiateStreaming(fetch("go.wasm"), go.importObject).then(
+        (result) => {
+          go.run(result.instance);
+        }
+      );
+
+      document.getElementById("tokenize").addEventListener("click", () => {
+        const input = document.getElementById("source").value;
+        const result = document.getElementById("tokenize_result");
+        result.value = tokenize(input);
+      });
+
+      document.getElementById("parse").addEventListener("click", () => {
+        const input = document.getElementById("source").value;
+        const result = document.getElementById("parse_result");
+        result.value = parse(input);
+      });
+
+      document.getElementById("exec").addEventListener("click", () => {
+        const input = document.getElementById("source").value;
+        const result = document.getElementById("exec_result");
+        result.value = eval(input);
+      });
+    </script>
+  </body>
+</html>

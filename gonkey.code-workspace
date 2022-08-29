@@ -1,0 +1,21 @@
+{
+  "folders": [
+    {
+      "name": "main",
+      "path": "."
+    },
+    {
+      "name": "web",
+      "path": "./web"
+    }
+  ],
+  "settings": {
+    "editor.formatOnSave": true,
+    "go.toolsEnvVars": {
+      "GOARCH": "wasm",
+      "GOOS": "js"
+    },
+    "deno.importMap": "./web/import_map.json",
+    "deno.lint": true,
+  },
+}

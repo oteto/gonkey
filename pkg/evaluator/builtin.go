@@ -1,7 +1,8 @@
 package evaluator
 
 import (
-	"fmt"
+	"io"
+	"os"
 
 	"github.com/oteto/gonkey/pkg/object"
 )
@@ -20,9 +21,15 @@ var builtins = map[string]*object.Builtin{
 	"puts":  {Fn: builtinPuts},
 }
 
+var Output io.Writer = os.Stdout
+
+func SetWriter(w io.Writer) {
+	Output = w
+}
+
 func builtinPuts(args ...object.Object) object.Object {
 	for _, arg := range args {
-		fmt.Println(arg.Inspect())
+		io.WriteString(Output, arg.Inspect()+"\n")
 	}
 	return NULL
 }
