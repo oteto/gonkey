@@ -11,7 +11,6 @@ import (
 	"github.com/oteto/gonkey/pkg/evaluator"
 	"github.com/oteto/gonkey/pkg/object"
 	"github.com/oteto/gonkey/pkg/parser"
-	"github.com/oteto/gonkey/pkg/token"
 	"github.com/oteto/gonkey/pkg/tokenizer"
 )
 
@@ -30,9 +29,16 @@ func TokenizerStart(in io.Reader, out io.Writer) {
 		line := scanner.Text()
 		t := tokenizer.New(line)
 
-		for tkn := t.NextToken(); tkn.Type != token.EOF; tkn = t.NextToken() {
-			fmt.Printf("%+v\n", tkn)
+		tokenJson, err := json.Marshal(t)
+		if err != nil {
+			log.Fatalf("ERROR: %v", err)
 		}
+		var buf bytes.Buffer
+		err = json.Indent(&buf, tokenJson, "", "  ")
+		if err != nil {
+			log.Fatalf("ERROR: %v", err)
+		}
+		fmt.Println(buf.String())
 	}
 }
 

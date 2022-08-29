@@ -1,12 +1,28 @@
 package tokenizer
 
-import "github.com/oteto/gonkey/pkg/token"
+import (
+	"encoding/json"
+
+	"github.com/oteto/gonkey/pkg/token"
+)
 
 type Tokenizer struct {
 	input        string
 	position     int  // 現在の読み込み位置
 	readPosition int  // 次の読み込み位置
 	char         byte // 読み込んだ文字（unicode にはひとまず対応しない）
+}
+
+func (t *Tokenizer) MarshalJSON() ([]byte, error) {
+	tokens := []token.Token{}
+	tkn := t.NextToken()
+	for tkn.Type != token.EOF {
+		tokens = append(tokens, tkn)
+		tkn = t.NextToken()
+	}
+	tokens = append(tokens, tkn)
+
+	return json.Marshal(tokens)
 }
 
 // 現在の読み込み文字のトークンを取得し、読み込み位置を進める
