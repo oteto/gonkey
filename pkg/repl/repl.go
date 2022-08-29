@@ -2,8 +2,11 @@ package repl
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 
 	"github.com/oteto/gonkey/pkg/evaluator"
 	"github.com/oteto/gonkey/pkg/object"
@@ -46,14 +49,17 @@ func ParserStart(in io.Reader, out io.Writer) {
 		line := scanner.Text()
 		p := parser.New(tokenizer.New(line))
 		program := p.ParseProgram()
-
-		if len(p.Errors()) != 0 {
-			printParserError(out, p.Errors())
-			continue
+		programJson, err := json.Marshal(program)
+		if err != nil {
+			log.Fatalf("ERROR: %v", err)
 		}
+		var buf bytes.Buffer
+		err = json.Indent(&buf, programJson, "", "  ")
+		if err != nil {
+			log.Fatalf("ERROR: %v", err)
+		}
+		fmt.Println(buf.String())
 
-		io.WriteString(out, program.String())
-		io.WriteString(out, "\n")
 	}
 }
 
