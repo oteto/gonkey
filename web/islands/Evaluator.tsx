@@ -32,8 +32,8 @@ export default function Evaluator() {
         <textarea
           id="code"
           class={tw`
-            resize-none focus:outline-none focus:ring-2 focus:ring-yellow-400 
-            border border-grey-500 rounded-lg bg-black text-white p-4 h-full
+            resize-none focus:outline-none focus:ring-2 focus:ring-yellow-400
+            border border-grey-500 rounded-lg bg-gray-800 text-white p-4 h-full
           `}
           onChange={(e) => {
             setInput(e.currentTarget.value);
@@ -77,8 +77,8 @@ export default function Evaluator() {
         <textarea
           readOnly={true}
           class={tw`
-            resize-none focus:outline-none focus:ring-2 focus:ring-yellow-400 
-            border border-grey-500 rounded-lg bg-black text-white p-4 h-full
+            resize-none focus:outline-none focus:ring-2 focus:ring-yellow-400
+            border border-grey-500 rounded-lg bg-gray-800 text-white p-4 h-full
           `}
         >
           {result}
@@ -100,7 +100,7 @@ const Button = ({ children, onClick }: Props) => {
             py-2 px-4 text-md font-bold bg-white text-yellow-600
             border-2 border-yellow-400 rounded-md focus:outline-none
             transition duration-200
-            hover:bg-yellow-400 hover:text-white 
+            hover:bg-yellow-400 hover:text-white
             active:bg-yellow-500
           `}
       onClick={onClick}

@@ -33,7 +33,7 @@ export default function Home() {
         `}
       >
         <div
-          class={tw`max-w-screen-xl space-y-8 h-full w-full flex flex-col`}
+          class={tw`max-w-screen-xl px-4 space-y-8 h-full w-full flex flex-col`}
         >
           <h1 class={tw`text-4xl font-bold text-yellow-400`}>
             Gonkey Interpreter Playground!🐒
