@@ -1,13 +1,14 @@
 /** @jsx h */
 import { Fragment, h } from "preact";
 import { tw } from "@twind";
-import { asset } from "$fresh/runtime.ts";
+import { asset, Head } from "$fresh/runtime.ts";
 import Evaluator from "../islands/Evaluator.tsx";
 
 export default function Home() {
   return (
     <Fragment>
-      <head>
+      <Head>
+        <title>Gonkey Playground</title>
         <script src={asset("/wasm_exec.js")} />
         <script
           dangerouslySetInnerHTML={{
@@ -26,7 +27,7 @@ export default function Home() {
           `,
           }}
         />
-      </head>
+      </Head>
       <div
         class={tw`
           bg-indigo-900 max-h-screen h-full flex flex-col py-4 items-center
